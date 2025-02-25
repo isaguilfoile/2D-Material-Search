@@ -1,7 +1,28 @@
 '''
 RESOURCES:
 https://py.imagej.net/en/latest/Initialization.html
+
+DEPENDENCIES:
+pyimagej
+Java
+Maven
 '''
+
+STITCH_MACRO = """
+#@ String grid_size_x
+#@ String grid_size_y
+#@ String tile_overlap
+#@ String image_path
+#@ String image_name
+#@ String output_path
+#@ String output_filename
+run("Grid/Collection stitching",
+    "type=[Grid: row-by-row] order=[Right & Down]" +
+    " grid_size_x=" + grid_size_x +
+    " grid_size_y=" + grid_size_y + 
+    "
+);
+"""
 
 import imagej
 import os
@@ -9,8 +30,8 @@ import os
 ij = imagej.init('sc.fiji:fiji') # Create ImageJ2 gateway including Fiji plugins
 print(f"ImageJ version: {ij.getVersion()}")
 
-image_folder = "/sub_images"
-output_folder = "/output"
+image_folder = "sub_images"
+output_folder = "output"
 
 # Create a list of all the images in the folder
 sub_images = sorted([f for f in os.listdir(image_folder) if f.endswith(('.tif', '.jpg', '.png'))])
@@ -22,7 +43,7 @@ sub_images_str = '\n'.join([os.path.join(image_folder, img) for img in sub_image
 
 # Run the Grid/Collection stitching plugin
 args = {
-        'type': 'Filename defined position',  # Choose 'Grid: row-by-row' if applicable
+    'type': 'Filename defined position',  # Choose 'Grid: row-by-row' if applicable
     'order': 'Left & Down',  # Adjust based on acquisition order
     'grid_size_x': 2,  # Adjust grid size based on your dataset
     'grid_size_y': 2,   # Adjust as needed
