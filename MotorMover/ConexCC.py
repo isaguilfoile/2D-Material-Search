@@ -4,31 +4,29 @@
 
 # dependant on 'clr' which is PythonNet package
 import clr
+import time #need for moveIn/moveOut (delete once integrated with microscope)
 from time import sleep
 
 # We assume Newport.CONEXCC.CommandInterface.dll is copied to our folder
 clr.AddReference("Newport.CONEXCC.CommandInterface")
 import CommandInterfaceConexCC
 
-DEV = 1                # hardcoded here to the first device
 MAX_VELOCITY = 0.4     # mm/s, by spec of NewPort TRA25CC DC Servo Motor
+STEP_SIZE = 0.05  
+WAIT_TIME = 0.5  # Wait time between moves (TEMPORARY) - instead of setting a wait time, we should integrate with microscope 
+                 # --> have def getPic that is called inside the while position <= WAFERSIZE and >=0
 
-def ConexCC_Init():
-    import clr
-    from time import sleep
-    clr.AddReference("Newport.CONEXCC.CommandInterface")
-    import CommandInterfaceConexCC
+
 
 class ConexCC:
 
-    def __init__(self, com_port, velocity, max_velocity, dev):
+    def __init__(self, com_port, velocity, dev):
         self.min_limit = -1
         self.max_limit = -1
         self.cur_pos = -1
         self.controller_state = ''
         self.positioner_error = ''
-        self.max_velocity = max_velocity
-        self.dev = dev
+        self.dev=dev
 
         self.driver = CommandInterfaceConexCC.ConexCC()
         ret = self.driver.OpenInstrument(com_port)
@@ -160,7 +158,7 @@ class ConexCC:
     def exit_disable_state(self):
         err_str = ''
         state = 1  # enable
-        res, err_str = self.driver.MM_Set(DEV, state, err_str)
+        res, err_str = self.driver.MM_Set(self.dev, state, err_str)
         if res != 0 or err_str != '':
             print('Oops: Leave Disable: result=%d,errString=\'%s\'' % (res, err_str))
         else:
@@ -175,8 +173,8 @@ class ConexCC:
             print('Finding Home')
 
     def set_homing_velocity(self, velocity):
-        if velocity > self.max_velocity:
-            velocity = self.max_velocity
+        if velocity > MAX_VELOCITY:
+            velocity = MAX_VELOCITY
         err_str = ''
         res, err_str = self.driver.OH_Set(self.dev, velocity, err_str)
         if res != 0 or err_str != '':
@@ -185,8 +183,8 @@ class ConexCC:
             print('Homing velocity set to %.1f mm/s' % velocity)
 
     def set_velocity(self, velocity):
-        if velocity > self.max_velocity:
-            velocity = self.max_velocity
+        if velocity > MAX_VELOCITY:
+            velocity = MAX_VELOCITY
         err_str = ''
         res, err_str = self.driver.VA_Set(self.dev, velocity, err_str)
         if res != 0 or err_str != '':
@@ -216,22 +214,64 @@ class ConexCC:
         # note that closing the communication will NOT stop the motor!
         self.driver.CloseInstrument()
 
-if __name__ == '__main__':
-    ConexCC.dump_possible_states()
-    conex_cc = ConexCC(com_port='com5', velocity=0.5)
-    ready = conex_cc.wait_for_ready(timeout=60)
-    if ready:
-        conex_cc.move_absolute(conex_cc.max_limit / 2)
-        ready = conex_cc.wait_for_ready(timeout=60)
-        if ready:
-            conex_cc.move_relative(-3)
-            ready = conex_cc.wait_for_ready(timeout=60)
-            if ready:
-                print('ok!')
-            else:
-                print('not ok 2!')
-        else:
-            print('not ok 1!')
-        conex_cc.close()
-    else:
-        print('something went wrong')
+    def moveOut(self, wafersize):
+        """ Moves the stage from position 0 to wafersize in steps of STEP_SIZE. """
+        position = 0
+        while position <= wafersize:
+            self.move_absolute(position)
+            if not self.wait_for_ready(timeout=60):
+                print("Movement failed!")
+                return False
+            time.sleep(WAIT_TIME)
+            position += STEP_SIZE
+        return True
+
+    def moveIn(self, wafersize):
+        """ Moves the stage back from wafersize to 0 in steps of STEP_SIZE. """
+        position = wafersize
+        while position >= 0:
+            self.move_absolute(position)
+            if not self.wait_for_ready(timeout=60):
+                print("Movement failed!")
+                return False
+            time.sleep(WAIT_TIME)
+            position -= STEP_SIZE
+        return True
+
+
+# if __name__ == '__main__':
+#     ConexCC.dump_possible_states()
+#     conex_cc = ConexCC(com_port='com4', velocity=0.5)
+#     ready = conex_cc.wait_for_ready(timeout=60)
+#     if ready:
+#         conex_cc.move_absolute(conex_cc.max_limit / 2)
+#         ready = conex_cc.wait_for_ready(timeout=60)
+#         if ready:
+#             #conex_cc.move_relative(-3)
+#             conex_cc.move_absolute(0)
+#             ready = conex_cc.wait_for_ready(timeout=60)
+#             if ready:
+#                 print('ok!')
+#             else:
+#                 print('not ok 2!')
+#         else:
+#             print('not ok 1!')
+#         conex_cc.close()
+#     else:
+#         print('something went wrong')
+
+# if __name__ == '__main__':
+#     WAFERSIZE = 0.5  # Define the wafer size limit
+
+#     ConexCC.dump_possible_states()
+#     conex_cc = ConexCC(com_port='com4', velocity=0.5)
+
+#     if conex_cc.wait_for_ready(timeout=60):
+#         if conex_cc.moveOut(WAFERSIZE):
+#             time.sleep(1)  # Wait 1 second at max position
+#             conex_cc.moveIn(WAFERSIZE)
+
+#         print("Completed movement sequence.")
+#         conex_cc.close()
+#     else:
+#         print("Controller not ready!")
