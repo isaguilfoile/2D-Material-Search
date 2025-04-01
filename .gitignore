@@ -1,6 +1,5 @@
 # Custom Ignores
-ImageStitch/subimages_props.csv
-ImageStitch/subimages.npy
+ImageStitch/output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
