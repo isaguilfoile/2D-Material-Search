@@ -15,12 +15,23 @@ import imageio.v2 as imageio
 import numpy as np
 
 def main():
-    # Create an output directory if it doesn't exist
-    output_dir = "ImageStitch/output"
+    # Create an output directory for BW images if it doesn't exist
+    output_bw_dir = "ImageStitch/output_bw"
+    if not os.path.exists(output_bw_dir):
+        os.makedirs(output_bw_dir, exist_ok=True)
+
+    # Delete all files in directory before saving new images
+    for file in os.listdir(output_bw_dir):
+        file_path = os.path.join(output_bw_dir, file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    # Create an output directory for adjusted images if it doesn't exist
+    output_dir = "ImageStitch/output_blending"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
-    # Delete all files in output_dir before saving new images
+    # Delete all files in directory before saving new images
     for file in os.listdir(output_dir):
         file_path = os.path.join(output_dir, file)
         if os.path.isfile(file_path):
@@ -72,12 +83,33 @@ def main():
     images,
     )
 
-    # Save the corrected images
-    for i, img_corrected in enumerate(images_transformed):
-        output_path = os.path.join(output_dir, f"{i:03d}.jpg")
-        imageio.imwrite(output_path, (img_corrected * 255).astype(np.uint8))
+    # Restore color before saving
+    images_transformed = (images_transformed * 255).astype(np.uint8)
 
-    # Plot the corrected results
+    # Save BW corrected images
+    for i, img_corrected in enumerate(images_transformed):
+        output_path = os.path.join(output_bw_dir, f"{i+1:02d}.jpg")
+        imageio.imwrite(output_path, img_corrected)
+
+    # Restore the color of original images
+    for filename in os.listdir(output_bw_dir):
+        corrected_path = os.path.join(output_bw_dir, filename)
+        original_path = os.path.join(raw_img_dir, filename)
+        # load images
+        original = cv.imread(original_path)
+        corrected_gray = cv.imread(corrected_path, cv.IMREAD_GRAYSCALE)
+        # Convert original to grayscale
+        original_gray = cv.cvtColor(original, cv.COLOR_BGR2GRAY)
+        # Avoid Division by zero
+        original_gray = np.where(original_gray == 0, 1, original_gray)
+        # Compute color transfer ratio
+        ratio = corrected_gray.astype(float) / original_gray.astype(float)
+        # Apply the ratio to the original image
+        recolored = np.clip(original.astype(float) * ratio[:, :, None], 0, 255).astype(np.uint8)
+        # Save the recolored image
+        output_path = os.path.join(output_dir, filename)
+        cv.imwrite(output_path, recolored)
+        print(f"Saved: {output_path}")
 
 if __name__ == "__main__":
     main()

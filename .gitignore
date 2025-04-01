@@ -1,5 +1,7 @@
 # Custom Ignores
 ImageStitch/output
+ImageStitch/output_bw
+ImageStitch/output_blending
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
