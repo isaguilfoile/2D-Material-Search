@@ -22,8 +22,15 @@
 
 import time
 from ConexCC import ConexCC
+from ImageCapture import DirectShowCam
+import os
 
 import sys  # Import sys to exit the script
+
+# Ensure that the image output directory exists before running
+output_dir = "MotorMover/images"
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 if __name__ == '__main__':
     WAFERSIZE = 0.5  # Define the wafer size limit TODO Add auto ranging
@@ -32,6 +39,9 @@ if __name__ == '__main__':
     if not (0 <= WAFERSIZE <= 12):
         print("Error: WAFERSIZE must be between 0 and 12.")
         sys.exit(1)  # Exit with an error code
+
+    # Create Camera instance
+    camera = DirectShowCam(camera_index=0)
 
     ConexCC.dump_possible_states()
     conex_X = ConexCC(com_port='com4', velocity=0.5, dev=1)
