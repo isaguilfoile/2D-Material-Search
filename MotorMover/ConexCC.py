@@ -13,8 +13,8 @@ import CommandInterfaceConexCC
 
 MAX_VELOCITY = 0.4     # mm/s, by spec of NewPort TRA25CC DC Servo Motor
 STEP_SIZE = 0.05  
-WAIT_TIME = 0.5  # Wait time between moves (TEMPORARY) - instead of setting a wait time, we should integrate with microscope 
-                 # --> have def getPic that is called inside the while position <= WAFERSIZE and >=0
+WAIT_TIME = 0.5  # Wait time between moves - instead of setting a wait time, we should integrate with microscope 
+                 # TODO have def getPic that is called inside def while position <= WAFERSIZE or >=0
 
 
 
@@ -238,6 +238,35 @@ class ConexCC:
             position -= STEP_SIZE
         return True
 
+def moveOutStep(self):
+    """Moves the motor out by one STEP_SIZE from its current position."""
+    current_position = self.get_current_position()
+    next_position = current_position + STEP_SIZE
+
+    self.move_absolute(next_position)
+    if not self.wait_for_ready(timeout=60):
+        print("Step movement failed!")
+        return False
+    return True
+
+def moveInStep(self):
+    """Moves the motor in by one STEP_SIZE from its current position."""
+    current_position = self.get_current_position()
+    next_position = current_position - STEP_SIZE
+
+    self.move_absolute(next_position)
+    if not self.wait_for_ready(timeout=60):
+        print("Step movement failed!")
+        return False
+    return True
+
+def goHome(self):
+    """Moves motor back to zero"""
+    position = 0
+    if not self.wait_for_ready(timeout=60):
+        print("Step movement failed!")
+        return False
+    return True
 
 # if __name__ == '__main__':
 #     ConexCC.dump_possible_states()
