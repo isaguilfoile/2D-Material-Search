@@ -33,7 +33,7 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 if __name__ == '__main__':
-    WAFERSIZE = 2  # Define the wafer size limit TODO Add auto ranging
+    WAFERSIZE = 0.5  # Define the wafer size limit TODO Add auto ranging
 
     # Check if WAFERSIZE is within the valid range
     if not (0 <= WAFERSIZE <= 12):
@@ -44,15 +44,35 @@ if __name__ == '__main__':
     camera = DirectShowCam(camera_index=0)
 
     ConexCC.dump_possible_states()
-    conex_X = ConexCC(com_port='com4', velocity=0.5, dev=1)
+    conex_X = ConexCC(com_port='com5', velocity=0.5, dev=1)
+    conex_Y = ConexCC(com_port='com6', velocity=0.5, dev=1)
 
-    if conex_X.wait_for_ready(timeout=60):
-        if conex_X.moveOut(WAFERSIZE): #TODO add FRAMESIZE to arg if we want to call getPic here, and then Y.moveOut(FRAMESIZE)
-            time.sleep(1)  # Wait 1 second at max position
-            #conex_Y.moveOut() #TODO use STEPSIZE in ConexCC to move down one
-            conex_X.moveIn(WAFERSIZE)
+    if conex_X.wait_for_ready(timeout=60) and conex_Y.wait_for_ready(timeout=60):
+        conex_X.goHome()
+        conex_Y.goHome()
 
-        print("Completed movement sequence.")
-        conex_X.close()
-    else:
-        print("Controller not ready!")
+    image_counter = 0  # Counter for naming images
+
+    while conex_Y.cur_pos < WAFERSIZE:
+        while conex_X.cur_pos < WAFERSIZE:
+            conex_X.moveOutStep()
+            image_name = f"{image_counter:02d}.jpg"
+            camera.capture_frame(output_dir, image_name) # TODO: Save image names, positions in CSV
+            image_counter += 1
+        conex_Y.moveOutStep()
+        while conex_X.cur_pos > 0:
+            conex_X.moveInStep()
+            image_name = f"{image_counter:02d}.jpg"
+            camera.capture_frame(output_dir, image_name)
+            image_counter += 1
+        conex_Y.moveOutStep()
+
+    # While y > wafer length:
+        # While X < width of wafer
+            # move x out a step
+            # take picture
+        # move y out a step
+        # While X > 0
+            # move X in a step
+            # Take a picture
+        # move y out a step

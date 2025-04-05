@@ -4,6 +4,7 @@ ImageStitch/output_bw
 ImageStitch/output_blending
 
 MotorMover/CameraTest
+MotorMover/images
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

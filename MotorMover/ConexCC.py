@@ -238,35 +238,39 @@ class ConexCC:
             position -= STEP_SIZE
         return True
 
-def moveOutStep(self):
-    """Moves the motor out by one STEP_SIZE from its current position."""
-    current_position = self.get_current_position()
-    next_position = current_position + STEP_SIZE
+    def moveOutStep(self):
+        """Moves the motor out by one STEP_SIZE from its current position."""
+        self.read_cur_pos()
+        next_position = self.cur_pos + STEP_SIZE
+        if next_position > self.max_limit:
+            next_position = self.max_limit
 
-    self.move_absolute(next_position)
-    if not self.wait_for_ready(timeout=60):
-        print("Step movement failed!")
-        return False
-    return True
+        self.move_absolute(next_position)
+        if not self.wait_for_ready(timeout=60):
+            print("Step movement failed!")
+            return False
+        return True
 
-def moveInStep(self):
-    """Moves the motor in by one STEP_SIZE from its current position."""
-    current_position = self.get_current_position()
-    next_position = current_position - STEP_SIZE
+    def moveInStep(self):
+        """Moves the motor in by one STEP_SIZE from its current position."""
+        self.read_cur_pos()
+        next_position = self.cur_pos - STEP_SIZE
+        if next_position < 0:
+            next_position = 0
 
-    self.move_absolute(next_position)
-    if not self.wait_for_ready(timeout=60):
-        print("Step movement failed!")
-        return False
-    return True
+        self.move_absolute(next_position)
+        if not self.wait_for_ready(timeout=60):
+            print("Step movement failed!")
+            return False
+        return True
 
-def goHome(self):
-    """Moves motor back to zero"""
-    position = 0
-    if not self.wait_for_ready(timeout=60):
-        print("Step movement failed!")
-        return False
-    return True
+    def goHome(self):
+        """Moves motor back to zero"""
+        if not self.wait_for_ready(timeout=60):
+            print("Step movement failed!")
+            return False
+        self.move_absolute(0)
+        return True
 
 # if __name__ == '__main__':
 #     ConexCC.dump_possible_states()
