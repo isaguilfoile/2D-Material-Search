@@ -33,7 +33,7 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 if __name__ == '__main__':
-    WAFERSIZE = 0.5  # Define the wafer size limit TODO Add auto ranging
+    WAFERSIZE = 2  # Define the wafer size limit TODO Add auto ranging
 
     # Check if WAFERSIZE is within the valid range
     if not (0 <= WAFERSIZE <= 12):
