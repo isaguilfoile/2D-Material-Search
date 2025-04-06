@@ -14,7 +14,6 @@ import CommandInterfaceConexCC
 MAX_VELOCITY = 0.4     # mm/s, by spec of NewPort TRA25CC DC Servo Motor
 STEP_SIZE = 0.05  
 WAIT_TIME = 0.5  # Wait time between moves - instead of setting a wait time, we should integrate with microscope 
-                 # TODO have def getPic that is called inside def while position <= WAFERSIZE or >=0
 
 
 
@@ -214,7 +213,7 @@ class ConexCC:
         # note that closing the communication will NOT stop the motor!
         self.driver.CloseInstrument()
 
-    def moveOut(self, wafersize):
+    def move_out(self, wafersize):
         """ Moves the stage from position 0 to wafersize in steps of STEP_SIZE. """
         position = 0
         while position <= wafersize:
@@ -226,7 +225,7 @@ class ConexCC:
             position += STEP_SIZE
         return True
 
-    def moveIn(self, wafersize):
+    def move_in(self, wafersize):
         """ Moves the stage back from wafersize to 0 in steps of STEP_SIZE. """
         position = wafersize
         while position >= 0:
@@ -238,31 +237,31 @@ class ConexCC:
             position -= STEP_SIZE
         return True
 
-    def moveOutStep(self):
-        """Moves the motor out by one STEP_SIZE from its current position."""
-        self.read_cur_pos()
-        next_position = self.cur_pos + STEP_SIZE
-        if next_position > self.max_limit:
-            next_position = self.max_limit
+    # def moveOutStep(self):
+    #     """Moves the motor out by one STEP_SIZE from its current position."""
+    #     self.read_cur_pos()
+    #     next_position = self.cur_pos + STEP_SIZE
+    #     if next_position > self.max_limit:
+    #         next_position = self.max_limit
 
-        self.move_absolute(next_position)
-        if not self.wait_for_ready(timeout=60):
-            print("Step movement failed!")
-            return False
-        return True
+    #     self.move_absolute(next_position)
+    #     if not self.wait_for_ready(timeout=60):
+    #         print("Step movement failed!")
+    #         return False
+    #     return True
 
-    def moveInStep(self):
-        """Moves the motor in by one STEP_SIZE from its current position."""
-        self.read_cur_pos()
-        next_position = self.cur_pos - STEP_SIZE
-        if next_position < 0:
-            next_position = 0
+    # def moveInStep(self):
+    #     """Moves the motor in by one STEP_SIZE from its current position."""
+    #     self.read_cur_pos()
+    #     next_position = self.cur_pos - STEP_SIZE
+    #     if next_position < 0:
+    #         next_position = 0
 
-        self.move_absolute(next_position)
-        if not self.wait_for_ready(timeout=60):
-            print("Step movement failed!")
-            return False
-        return True
+    #     self.move_absolute(next_position)
+    #     if not self.wait_for_ready(timeout=60):
+    #         print("Step movement failed!")
+    #         return False
+    #     return True
 
     def goHome(self):
         """Moves motor back to zero"""
@@ -271,40 +270,3 @@ class ConexCC:
             return False
         self.move_absolute(0)
         return True
-
-# if __name__ == '__main__':
-#     ConexCC.dump_possible_states()
-#     conex_cc = ConexCC(com_port='com4', velocity=0.5)
-#     ready = conex_cc.wait_for_ready(timeout=60)
-#     if ready:
-#         conex_cc.move_absolute(conex_cc.max_limit / 2)
-#         ready = conex_cc.wait_for_ready(timeout=60)
-#         if ready:
-#             #conex_cc.move_relative(-3)
-#             conex_cc.move_absolute(0)
-#             ready = conex_cc.wait_for_ready(timeout=60)
-#             if ready:
-#                 print('ok!')
-#             else:
-#                 print('not ok 2!')
-#         else:
-#             print('not ok 1!')
-#         conex_cc.close()
-#     else:
-#         print('something went wrong')
-
-# if __name__ == '__main__':
-#     WAFERSIZE = 0.5  # Define the wafer size limit
-
-#     ConexCC.dump_possible_states()
-#     conex_cc = ConexCC(com_port='com4', velocity=0.5)
-
-#     if conex_cc.wait_for_ready(timeout=60):
-#         if conex_cc.moveOut(WAFERSIZE):
-#             time.sleep(1)  # Wait 1 second at max position
-#             conex_cc.moveIn(WAFERSIZE)
-
-#         print("Completed movement sequence.")
-#         conex_cc.close()
-#     else:
-#         print("Controller not ready!")

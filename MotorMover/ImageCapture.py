@@ -3,6 +3,7 @@
 
 import cv2
 import os
+import pandas as pd
 
 def find_available_cameras(max_index=10):
     """
@@ -21,18 +22,31 @@ def find_available_cameras(max_index=10):
 
 class DirectShowCam:
 
-    def __init__(self, camera_index):
+    def __init__(self, camera_index, directory):
         self.index = camera_index
+        self.save_directory = directory
+        self.data_table = pd.DataFrame(columns=["Image Name", "X Position", "Y Position"])
         # Initialize the camera
         self.cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
 
         if not self.cap.isOpened():
             print("Error: Could not open the camera")
+
+        # Ensure that the image output directory exists before running
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # Delete all files in directory before saving new images
+        for file in os.listdir(directory):
+            file_path = os.path.join(directory, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
         
-    def capture_frame(self, save_directory, file_name):
+    def capture_frame(self, file_name):
+        """ Take an image WITHOUT appending it to the image location table """
         # Ensure that save directory exists
-        if not os.path.exists(save_directory):
-            os.makedirs(save_directory, exist_ok=True);
+        if not os.path.exists(self.save_directory):
+            os.makedirs(self.save_directory, exist_ok=True);
 
         # Capture a single frame (image) and save
         ret, frame = self.cap.read()
@@ -42,10 +56,30 @@ class DirectShowCam:
             self.cap.release()
             return False
         
-        file_path = os.path.join(save_directory, file_name)
+        file_path = os.path.join(self.save_directory, file_name)
         cv2.imwrite(file_path, frame)
 
         return True
+    
+    def document_frame(self, file_name, x_pos, y_pos):
+        """ Take an image and append its location to the image table """
+        self.capture_frame(file_name) # Take image and save
+        new_row = {
+            "Image Name": file_name,
+            "X Position": x_pos,
+            "Y Position": y_pos
+        }
+        self.data_table.loc[-1] = [file_name, x_pos, y_pos]
+        self.data_table.index += 1
+        self.data_table.sort_index()
+
+        return True
+    
+    def save_table(self, file_path):
+        """ Saves image data table to a csv file """
+        self.data_table.to_csv(file_path, index=False)
+        print(f"Data table saved to {file_path}")
+
 
     def close(self):
         # De-initialize the camera
@@ -57,6 +91,8 @@ class DirectShowCam:
 if __name__ == "__main__":
     print(find_available_cameras())
     # Create and initialize camera
-    camera = DirectShowCam(camera_index=1)
-    camera.capture_frame("MotorMover/CameraTest", "test.jpg")
+    camera = DirectShowCam(camera_index=0, directory="MotorMover/CameraTest")
+    camera.document_frame("test1.jpg", 1, 2)
+    camera.document_frame("test2.jpg", 5, 6)
+    camera.save_table("MotorMover/CameraTest/test.csv")
     camera.close()
