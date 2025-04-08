@@ -1,4 +1,7 @@
 # Custom Ignores
+images/
+files/
+
 ImageStitch/output
 ImageStitch/output_bw
 ImageStitch/output_blending

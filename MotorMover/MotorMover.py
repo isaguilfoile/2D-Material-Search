@@ -1,11 +1,11 @@
 import time
 from ConexCC import ConexCC
-from ImageCapture import DirectShowCam
+from ImageCapture import DirectShowCam, find_available_cameras
 import os
 
 import sys  # Import sys to exit the script
 
-output_dir = "MotorMover/images"
+output_dir = "images/raw/"
 
 if __name__ == '__main__':
     WAFER_SIZE = 0.5  # Define the wafer size limit TODO Add auto ranging
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         Save a photo and update the image table. This should be called at every stage position
         """
         image_name = f"{image_counter:02d}.jpg"
-        camera.document_frame(image_name, conex_X.cur_pos, conex_Y.cur_pos)
+        camera.document_frame(image_name, conex_X.cur_pos, conex_Y.cur_pos, 0)
         image_counter += 1
     
     take_picture() # Take picture at home location (0, 0)
@@ -49,5 +49,6 @@ if __name__ == '__main__':
             take_picture()
         conex_Y.move_relative(STEP_SIZE)
 
-    camera.save_table("MotorMover/image_dt.csv") # Save table containing image names and locations
+    camera.close()
+    camera.save_table("files", "image_dt.csv") # Save table containing image names and locations
     

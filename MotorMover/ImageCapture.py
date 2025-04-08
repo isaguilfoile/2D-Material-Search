@@ -25,7 +25,7 @@ class DirectShowCam:
     def __init__(self, camera_index, directory):
         self.index = camera_index
         self.save_directory = directory
-        self.data_table = pd.DataFrame(columns=["Image Name", "X Position", "Y Position"])
+        self.data_table = pd.DataFrame(columns=["Image Name", "X Position", "Y Position", "Z Position"])
         # Initialize the camera
         self.cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
 
@@ -61,22 +61,22 @@ class DirectShowCam:
 
         return True
     
-    def document_frame(self, file_name, x_pos, y_pos):
+    def document_frame(self, file_name, x_pos, y_pos, z_pos):
         """ Take an image and append its location to the image table """
         self.capture_frame(file_name) # Take image and save
-        new_row = {
-            "Image Name": file_name,
-            "X Position": x_pos,
-            "Y Position": y_pos
-        }
-        self.data_table.loc[-1] = [file_name, x_pos, y_pos]
+
+        self.data_table.loc[-1] = [file_name, x_pos, y_pos, z_pos]
         self.data_table.index += 1
         self.data_table.sort_index()
 
         return True
     
-    def save_table(self, file_path):
+    def save_table(self, directory, file_name):
         """ Saves image data table to a csv file """
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        file_path = os.path.join(directory, file_name)
         self.data_table.to_csv(file_path, index=False)
         print(f"Data table saved to {file_path}")
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     print(find_available_cameras())
     # Create and initialize camera
     camera = DirectShowCam(camera_index=0, directory="MotorMover/CameraTest")
-    camera.document_frame("test1.jpg", 1, 2)
-    camera.document_frame("test2.jpg", 5, 6)
-    camera.save_table("MotorMover/CameraTest/test.csv")
+    camera.document_frame("test1.jpg", 1, 2, 0)
+    camera.document_frame("test2.jpg", 5, 6, 0)
+    camera.save_table("files", "test.csv")
     camera.close()
