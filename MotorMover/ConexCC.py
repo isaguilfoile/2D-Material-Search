@@ -199,8 +199,11 @@ class ConexCC:
                 print('Oops: Move Relative: result=%d,errString=\'%s\'' % (res, err_str))
             else:
                 print('Moving Relative %.3f mm' % distance)
-                time.sleep(1)
+                new_pos = self.cur_pos + distance
                 self.read_cur_pos()
+                while (abs(self.cur_pos - new_pos) >= 0.05):
+                    self.read_cur_pos()
+                time.sleep(0.1)
 
     def move_absolute(self, new_pos):
         if self.is_ready():
@@ -210,33 +213,12 @@ class ConexCC:
                 print('Oops: Move Absolute: result=%d,errString=\'%s\'' % (res, err_str))
             else:
                 print('Moving to position %.3f mm' % new_pos)
-                time.sleep(1)
                 self.read_cur_pos()
+                while (abs(self.cur_pos - new_pos) >= 0.05):
+                    self.read_cur_pos()
+                time.sleep(0.1)
 
     def close(self):
         # note that closing the communication will NOT stop the motor!
+        self.move_absolute(self.max_limit) # Move to max position
         self.driver.CloseInstrument()
-
-    def move_out(self, wafersize):
-        """ Moves the stage from position 0 to wafersize in steps of STEP_SIZE. """
-        position = 0
-        while position <= wafersize:
-            self.move_absolute(position)
-            if not self.wait_for_ready(timeout=60):
-                print("Movement failed!")
-                return False
-            time.sleep(WAIT_TIME)
-            position += STEP_SIZE
-        return True
-
-    def move_in(self, wafersize):
-        """ Moves the stage back from wafersize to 0 in steps of STEP_SIZE. """
-        position = wafersize
-        while position >= 0:
-            self.move_absolute(position)
-            if not self.wait_for_ready(timeout=60):
-                print("Movement failed!")
-                return False
-            time.sleep(WAIT_TIME)
-            position -= STEP_SIZE
-        return True

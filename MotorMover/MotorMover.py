@@ -7,11 +7,42 @@ import sys  # Import sys to exit the script
 
 output_dir = "images/raw/"
 
+def snake_positions(x_0, x_n, y_0, y_n, delta):
+    positions = []
+    
+    # Handle step direction properly
+    x_direction = 1 if x_n >= x_0 else -1
+    y_direction = 1 if y_n >= y_0 else -1
+
+    # Compute ranges using float-compatible arange logic
+    def float_range(start, stop, step):
+        num_steps = int(abs((stop - start) / step)) + 1
+        return [start + i * step for i in range(num_steps)]
+
+    x_vals = float_range(x_0, x_n, delta * x_direction)
+    y_vals = float_range(y_0, y_n, delta * y_direction)
+
+    for idx, y in enumerate(y_vals):
+        row = x_vals if idx % 2 == 0 else x_vals[::-1]
+        for x in row:
+            positions.append((round(x, 10), round(y, 10)))  # rounding to avoid floating point weirdness
+
+    return positions
+
 if __name__ == '__main__':
     image_counter = 0
 
-    WAFER_SIZE = 0.75  # Define the wafer size limit TODO Add auto ranging
-    STEP_SIZE = -1 * 0.15 # TODO Figure out the desired step size
+    WAFER_SIZE = 0.64  # Define the wafer size limit TODO Add auto ranging
+    STEP_SIZE = 0.16 # TODO Figure out the desired step size
+
+    START_X = 12
+    END_X = 11.36
+
+    START_Y = 12
+    END_Y = 11.36
+
+    locations = snake_positions(START_X, END_X, START_Y, END_Y, STEP_SIZE)
+    print(locations)
 
     # Check if WAFER SIZE is within the valid range
     if not (0 <= WAFER_SIZE <= 12):
@@ -26,8 +57,8 @@ if __name__ == '__main__':
     conex_Y = ConexCC(com_port='com6', velocity=0.5, dev=1)
 
     if conex_X.wait_for_ready(timeout=60) and conex_Y.wait_for_ready(timeout=60):
-        conex_X.goHome()
-        conex_Y.goHome()
+        conex_X.move_absolute(12)
+        conex_Y.move_absolute(12)
 
     image_counter = 0  # Counter for naming images
 
@@ -40,22 +71,16 @@ if __name__ == '__main__':
         image_name = f"{image_counter:02d}.jpg"
         camera.document_frame(image_name, conex_X.cur_pos, conex_Y.cur_pos, 0)
         image_counter += 1
-    
-    take_picture() # Take picture at home location (0, 0)
-    while conex_Y.cur_pos < WAFER_SIZE:
-        while conex_X.cur_pos < WAFER_SIZE:
-            conex_X.move_relative(STEP_SIZE)
-            print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
-            take_picture()
-        conex_Y.move_relative(STEP_SIZE)
-        print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
+
+    take_picture()
+    for location in locations:
+        conex_X.move_absolute(location[0])
+        conex_Y.move_absolute(location[1])
+        time.sleep(8)
         take_picture()
-        while conex_X.cur_pos > 0:
-            conex_X.move_relative(-1 * STEP_SIZE)
-            print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
-            take_picture()
-        conex_Y.move_relative(STEP_SIZE)
-        print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
+
+    conex_X.close()
+    conex_Y.close()
 
     camera.close()
     camera.save_table("files", "image_dt.csv") # Save table containing image names and locations
