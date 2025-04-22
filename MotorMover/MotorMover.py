@@ -8,8 +8,10 @@ import sys  # Import sys to exit the script
 output_dir = "images/raw/"
 
 if __name__ == '__main__':
-    WAFER_SIZE = 0.5  # Define the wafer size limit TODO Add auto ranging
-    STEP_SIZE = 0.05 # TODO Figure out the desired step size
+    image_counter = 0
+
+    WAFER_SIZE = 0.75  # Define the wafer size limit TODO Add auto ranging
+    STEP_SIZE = -1 * 0.15 # TODO Figure out the desired step size
 
     # Check if WAFER SIZE is within the valid range
     if not (0 <= WAFER_SIZE <= 12):
@@ -33,6 +35,8 @@ if __name__ == '__main__':
         """
         Save a photo and update the image table. This should be called at every stage position
         """
+        global image_counter
+
         image_name = f"{image_counter:02d}.jpg"
         camera.document_frame(image_name, conex_X.cur_pos, conex_Y.cur_pos, 0)
         image_counter += 1
@@ -41,13 +45,17 @@ if __name__ == '__main__':
     while conex_Y.cur_pos < WAFER_SIZE:
         while conex_X.cur_pos < WAFER_SIZE:
             conex_X.move_relative(STEP_SIZE)
+            print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
             take_picture()
         conex_Y.move_relative(STEP_SIZE)
+        print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
         take_picture()
         while conex_X.cur_pos > 0:
             conex_X.move_relative(-1 * STEP_SIZE)
+            print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
             take_picture()
         conex_Y.move_relative(STEP_SIZE)
+        print(f"coords: {conex_X.cur_pos} :: {conex_Y.cur_pos} ")
 
     camera.close()
     camera.save_table("files", "image_dt.csv") # Save table containing image names and locations

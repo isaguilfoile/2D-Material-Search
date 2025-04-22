@@ -199,6 +199,8 @@ class ConexCC:
                 print('Oops: Move Relative: result=%d,errString=\'%s\'' % (res, err_str))
             else:
                 print('Moving Relative %.3f mm' % distance)
+                time.sleep(1)
+                self.read_cur_pos()
 
     def move_absolute(self, new_pos):
         if self.is_ready():
@@ -208,6 +210,8 @@ class ConexCC:
                 print('Oops: Move Absolute: result=%d,errString=\'%s\'' % (res, err_str))
             else:
                 print('Moving to position %.3f mm' % new_pos)
+                time.sleep(1)
+                self.read_cur_pos()
 
     def close(self):
         # note that closing the communication will NOT stop the motor!
@@ -235,38 +239,4 @@ class ConexCC:
                 return False
             time.sleep(WAIT_TIME)
             position -= STEP_SIZE
-        return True
-
-    # def moveOutStep(self):
-    #     """Moves the motor out by one STEP_SIZE from its current position."""
-    #     self.read_cur_pos()
-    #     next_position = self.cur_pos + STEP_SIZE
-    #     if next_position > self.max_limit:
-    #         next_position = self.max_limit
-
-    #     self.move_absolute(next_position)
-    #     if not self.wait_for_ready(timeout=60):
-    #         print("Step movement failed!")
-    #         return False
-    #     return True
-
-    # def moveInStep(self):
-    #     """Moves the motor in by one STEP_SIZE from its current position."""
-    #     self.read_cur_pos()
-    #     next_position = self.cur_pos - STEP_SIZE
-    #     if next_position < 0:
-    #         next_position = 0
-
-    #     self.move_absolute(next_position)
-    #     if not self.wait_for_ready(timeout=60):
-    #         print("Step movement failed!")
-    #         return False
-    #     return True
-
-    def goHome(self):
-        """Moves motor back to zero"""
-        if not self.wait_for_ready(timeout=60):
-            print("Step movement failed!")
-            return False
-        self.move_absolute(0)
         return True
