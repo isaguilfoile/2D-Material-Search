@@ -72,7 +72,6 @@ if __name__ == '__main__':
         camera.document_frame(image_name, conex_X.cur_pos, conex_Y.cur_pos, 0)
         image_counter += 1
 
-    take_picture()
     for location in locations:
         conex_X.move_absolute(location[0])
         conex_Y.move_absolute(location[1])
