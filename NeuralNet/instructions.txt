@@ -1,0 +1,19 @@
+To use the neural network (without training):
+use image_resize.py to normalize and scale all images to 1000x1000
+    place all images into fullTrain/to_resizee
+    results will be placed into fullTrain/1k
+
+make sure newTrain.mat is in directory
+
+open matlab and make the CD 2D-Material-Search/NeuralNet (will not work if this is not the case)
+
+run step4
+
+To train the neural network, use image_resize.py, but do not normalize the images, only rescale.
+
+Go through step1 to step3
+
+step1 will take a long time as you have to manually scan through and identify flakes
+step2 and 3 will not require any user input other than running them
+
+then repeat lines 1-10 to run your new model

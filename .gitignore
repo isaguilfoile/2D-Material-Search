@@ -9,6 +9,13 @@ ImageStitch/output_blending
 MotorMover/CameraTest
 MotorMover/images
 
+NeuralNet/fullTrain/1k
+NeuralNet/fullTrain/Augmented_data
+NeuralNet/fullTrain/classified
+NeuralNet/fullTrain/labeled_images
+NeuralNet/fullTrain/labels
+NeuralNet/fullTrain/to_resize
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
