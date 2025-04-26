@@ -17,14 +17,16 @@ def remove_background(img_directory, img_name, dst_directory, dst_name):
     shadow_removed = cv2.normalize(shadow_removed, None, 0, 255, cv2.NORM_MINMAX)
     
     # (Optional) Enhance contrast using CLAHE
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    enhanced = clahe.apply(shadow_removed)
+    # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    # enhanced = clahe.apply(shadow_removed)
 
     # Display result
-    plt.imshow(enhanced, cmap='gray')
+    plt.imshow(shadow_removed, cmap='gray')
     plt.title('Background Removed')
     plt.axis('off')
     plt.show()
+
+    return shadow_removed
     
 if __name__ == "__main__":
     remove_background("ImageStitch/ms_images_1", "01.jpg", " ", " ")
