@@ -28,6 +28,8 @@ class DirectShowCam:
         self.data_table = pd.DataFrame(columns=["Image Name", "X Position", "Y Position", "Z Position"])
         # Initialize the camera
         self.cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
 
         if not self.cap.isOpened():
             print("Error: Could not open the camera")
@@ -41,6 +43,14 @@ class DirectShowCam:
             file_path = os.path.join(directory, file)
             if os.path.isfile(file_path):
                 os.remove(file_path)
+
+    def get_frame(self):
+        """Grab a frame and return it as a numpy array (BGR)."""
+        ret, frame = self.cap.read()
+        if not ret:
+            raise RuntimeError("Failed to capture frame from camera.")
+        return frame
+
         
     def capture_frame(self, file_name):
         """ Take an image WITHOUT appending it to the image location table """
@@ -91,8 +101,10 @@ class DirectShowCam:
 if __name__ == "__main__":
     print(find_available_cameras())
     # Create and initialize camera
-    camera = DirectShowCam(camera_index=0, directory="MotorMover/CameraTest")
+    camera = DirectShowCam(camera_index=1, directory="MotorMover/CameraTest")
     camera.document_frame("test1.jpg", 1, 2, 0)
+    image1 = cv2.imread("MotorMover/CameraTest/test1.jpg")
+    print(image1.shape)
     camera.document_frame("test2.jpg", 5, 6, 0)
     camera.save_table("files", "test.csv")
     camera.close()
