@@ -63,7 +63,7 @@ def connect_numbers():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def center_of_frame(image_path):
+def center_of_frame(image_path, debug=False):
     # Load image
     image = cv2.imread(image_path)
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -81,11 +81,19 @@ def center_of_frame(image_path):
     # Store results
     coordinates = []
 
+    if (debug):
+        print(data['text'])
 
-    if (len(data['text']) == 4):
+    num_count = 0
+    for i in range(len(data['text'])):
+        text = data['text'][i].strip()
+        if text.isdigit() and (len(text) == 2):
+            num_count += 1
+
+    if (num_count == 4):
         for i in range(len(data['text'])):
             text = data['text'][i].strip()
-            if text.isdigit():
+            if text.isdigit() and (len(text) == 2):
                 x = data['left'][i]
                 y = data['top'][i]
                 w = data['width'][i]
@@ -97,12 +105,11 @@ def center_of_frame(image_path):
         center_x_pixel = 0
         center_y_pixel = 0
         for num_center in coordinates:
-            print(num_center)
             center_x_pixel += num_center[0]
             center_y_pixel += num_center[1]
 
-        center_x_pixel = center_x_pixel / 4
-        center_y_pixel = center_y_pixel / 4
+        center_x_pixel = round(center_x_pixel / 4)
+        center_y_pixel = round(center_y_pixel / 4)
 
         offset_x = (center_x_pixel - center_x) * (1/21600)
         offset_y = (center_y_pixel - center_y) * (1/21600)
@@ -110,7 +117,30 @@ def center_of_frame(image_path):
         offset_x = 0
         offset_y = 0
 
+    if (debug):
+        output_img = image.copy()
+        
+        for coordinate in coordinates:
+            cv2.circle(output_img, (coordinate[0], coordinate[1]), 10, (0, 255, 0), -1)
+
+        # Draw the center point
+        print(center_x_pixel, center_y_pixel)
+        cv2.circle(output_img, (center_x_pixel, center_y_pixel), 15, (255, 0, 0), -1)
+
+
+        # Resize image for display if it's too large
+        max_width = 1200  # pixels
+        scale = 1.0
+        if output_img.shape[1] > max_width:
+            scale = max_width / output_img.shape[1]
+            output_img = cv2.resize(output_img, (0, 0), fx=scale, fy=scale)
+
+        # Show image
+        cv2.imshow("Detected Numbers with Distances", output_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
     return (offset_x, offset_y) # Offset distance in micro meters
 
 if __name__ == "__main__":
-    connect_numbers()
+    print(center_of_frame("images/raw/06.jpg", debug=False))
