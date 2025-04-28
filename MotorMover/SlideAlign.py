@@ -4,12 +4,23 @@ from math import sqrt
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
 
+def pre_process(image: cv2.typing.MatLike) -> cv2.typing.MatLike:
+    # Hopefully improve the accuracy of OCR using Otsu's thresholding method
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # threshold the image using Otsu's thresholding method
+    thresh = cv2.threshold(gray, 0, 255, 
+                           cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+    
+    return thresh
+
 def connect_numbers():
     # Load image
     image_path = "images/raw/tmp.jpg"
     image = cv2.imread(image_path)
     print(image.shape)
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    processed = pre_process(image=image)
 
     # Configure pytesseract to detect only numbers
     options = "outputbase digits"
@@ -68,14 +79,16 @@ def center_of_frame(image_path, debug=False):
     image = cv2.imread(image_path)
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Configure pytesseract to detect only numbers
-    options = "outputbase digits"
+    processed = pre_process(image)
+
+    # Configure pytesseract to detect only numbers
+    options = "--psm 11 outputbase digits"
 
     # Get image center
     height, width, _ = rgb.shape
     center_x, center_y = width // 2, height // 2
     # Run OCR
-    data = pytesseract.image_to_data(rgb, config=options, output_type=pytesseract.Output.DICT)
+    data = pytesseract.image_to_data(processed, config=options, output_type=pytesseract.Output.DICT)
 
 
     # Store results
@@ -143,4 +156,4 @@ def center_of_frame(image_path, debug=False):
     return (offset_x, offset_y) # Offset distance in micro meters
 
 if __name__ == "__main__":
-    print(center_of_frame("images/raw/00.jpg", debug=True))
+    print(center_of_frame("images/raw/042.jpg", debug=True))
