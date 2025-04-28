@@ -109,34 +109,31 @@ def fine_tune_start(conex_X, conex_Y, step_size=0.01):
 
     return total_dx, total_dy
 
-def motor_move(offsets, conex_X, conex_Y, focal, image_counter, camera: DirectShowCam):
+def motor_move(conex_X, conex_Y, locations, image_counter, camera: DirectShowCam):
 
     WAFER_SIZE = 0.64  # Define the wafer size limit
     STEP_SIZE = 0.16   # Step size in mm
-
-    START_X = 11.5
-    END_X = 0
-    START_Y = 11.5
-    END_Y = 0
-
-    F_END_X = 6.25
-    F_END_Y = 6.25
 
     if not (0 <= WAFER_SIZE <= 12):
         print("Error: WAFER_SIZE must be between 0 and 12.")
         sys.exit(1)
 
-    locations = snake_positions(focal[0], focal[0] - WAFER_SIZE, focal[1], focal[1] - WAFER_SIZE, STEP_SIZE, 5)
+    print(f"Conex X: {conex_X.cur_pos}")
+    print(f"Conex Y: {conex_Y.cur_pos}")
+    print(f"Set Loc: {locations}")
 
     for index, location in enumerate(locations):
+        print(f"Conex X bef: {conex_X.cur_pos}")
+        print(f"Conex Y bef: {conex_Y.cur_pos}")
         conex_X.move_absolute(location[0])
         conex_Y.move_absolute(location[1])
+        print(f"Conex X: {conex_X.cur_pos}")
+        print(f"Conex Y: {conex_Y.cur_pos}")
         time.sleep(0.1)
-
+        print("inside:,", conex_X.cur_pos, conex_Y.cur_pos)
         camera.capture_frame("tmp.jpg")
         offset_x, offset_y = center_of_frame("images/raw/tmp.jpg")
         offset_x = -offset_x
-        # offset_y = -offset_y
         print(f"Centering correction: ({offset_x:.4f}, {offset_y:.4f})")
 
         offset_locations(offset_x, offset_y, locations, index)

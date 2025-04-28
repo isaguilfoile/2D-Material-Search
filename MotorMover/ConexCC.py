@@ -214,7 +214,7 @@ class ConexCC:
             else:
                 print('Moving to position %.3f mm' % new_pos)
                 self.read_cur_pos()
-                while (abs(self.cur_pos - new_pos) >= 0.05):
+                while (abs(self.cur_pos - new_pos) >= 0.01):
                     self.read_cur_pos()
                 time.sleep(0.1)
 

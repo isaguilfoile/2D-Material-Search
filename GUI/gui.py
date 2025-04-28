@@ -117,6 +117,8 @@ def check_motor_status():
         root.after(1000, check_motor_status)
 
 def re_end_fine_tune():
+    conex_X.read_cur_pos()
+    conex_Y.read_cur_pos()
     global motor_thread
     global locals_idx
     global offsets
@@ -129,7 +131,8 @@ def re_end_fine_tune():
     offsetx = conex_X.cur_pos - major_locs[locals_idx][0]
     offsety = conex_Y.cur_pos - major_locs[locals_idx][1]
     offset_locations(offsetx, offsety, major_locs, locals_idx)
-    motor_thread = threading.Thread(target=motor_move, args=(offsets, conex_X, conex_Y, major_locs[locals_idx], imagectr, camera,))
+    locations = snake_positions(major_locs[locals_idx][0], major_locs[locals_idx][0] - 0.64, major_locs[locals_idx][1], major_locs[locals_idx][1] - 0.64, 0.16, 5)
+    motor_thread = threading.Thread(target=motor_move, args=(conex_X, conex_Y, locations, imagectr, camera,))
     motor_thread.daemon = True
     motor_thread.start()
     locals_idx += 1
@@ -155,6 +158,8 @@ def get_pos():
             position[0] -= 1
 
 def on_end_fine_tuning():
+    conex_X.read_cur_pos()
+    conex_Y.read_cur_pos()
     global motor_thread
     global locals_idx
     global major_locs
@@ -168,7 +173,9 @@ def on_end_fine_tuning():
     endy = conex_Y.cur_pos - 5.25
     major_locs = snake_positions(conex_X.cur_pos, endx, conex_Y.cur_pos, endy, 1.05, 6)
     # Start motor movement in a separate thread
-    motor_thread = threading.Thread(target=motor_move, args=(offsets, conex_X, conex_Y, major_locs[locals_idx], imagectr, camera,))
+    print("out,", conex_X.cur_pos, conex_Y.cur_pos)
+    locations = snake_positions(major_locs[locals_idx][0], major_locs[locals_idx][0] - 0.64, major_locs[locals_idx][1], major_locs[locals_idx][1] - 0.64, 0.16, 5)
+    motor_thread = threading.Thread(target=motor_move, args=(conex_X, conex_Y, locations, imagectr, camera,))
     motor_thread.daemon = True
     motor_thread.start()
     locals_idx += 1
