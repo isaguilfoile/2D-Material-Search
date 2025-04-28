@@ -156,4 +156,4 @@ def center_of_frame(image_path, debug=False):
     return (offset_x, offset_y) # Offset distance in micro meters
 
 if __name__ == "__main__":
-    print(center_of_frame("images/raw/042.jpg", debug=True))
+    print(center_of_frame("images/raw/003.jpg", debug=True))

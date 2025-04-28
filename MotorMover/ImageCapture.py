@@ -4,6 +4,7 @@
 import cv2
 import os
 import pandas as pd
+import threading
 
 def find_available_cameras(max_index=10):
     """
@@ -26,10 +27,16 @@ class DirectShowCam:
         self.index = camera_index
         self.save_directory = directory
         self.data_table = pd.DataFrame(columns=["Image Name", "X Position", "Y Position", "Z Position"])
+        self.font = cv2.FONT_HERSHEY_SIMPLEX
+        self.font_scale = 0.5
+        self.color = (255, 215, 0)
+        self.thickness = 1
         # Initialize the camera
         self.cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+        self.thread = threading.Thread(target=self.get_frame)
+        self.thread.start()
 
         if not self.cap.isOpened():
             print("Error: Could not open the camera")

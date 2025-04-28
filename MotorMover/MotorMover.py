@@ -29,7 +29,7 @@ def snake_positions(x_0, x_n, y_0, y_n, delta, num_steps):
     for idx, y in enumerate(y_vals):
         row = x_vals if idx % 2 == 0 else x_vals[::-1]
         for x in row:
-            positions.append([round(x, 2), round(y, 2)])  # rounding to avoid floating point weirdness
+            positions.append([x, y])  # rounding to avoid floating point weirdness
 
     return positions
 
@@ -109,8 +109,7 @@ def fine_tune_start(conex_X, conex_Y, step_size=0.01):
 
     return total_dx, total_dy
 
-if __name__ == '__main__':
-    image_counter = 0
+def motor_move(offsets, conex_X, conex_Y, focal, image_counter, camera: DirectShowCam):
 
     WAFER_SIZE = 0.64  # Define the wafer size limit
     STEP_SIZE = 0.16   # Step size in mm
@@ -127,38 +126,7 @@ if __name__ == '__main__':
         print("Error: WAFER_SIZE must be between 0 and 12.")
         sys.exit(1)
 
-    locations = []
-    big_locations = snake_positions(START_X, F_END_X, START_Y, F_END_Y, 1.05, 6)
-    for local in big_locations:
-        START_X = round(local[0], 2)
-        START_Y = round(local[1], 2)
-        END_X = round((START_X - 0.64), 2)
-        END_Y = round((START_Y - 0.64), 2)
-        temp = snake_positions(START_X, END_X, START_Y, END_Y, 0.16, 5)
-        for place in temp:
-            locations.append(place)
-
-    # print(locations, len(locations))
-    print(len(big_locations))
-
-    camera = DirectShowCam(camera_index=1, directory=output_dir)
-
-    ConexCC.dump_possible_states()
-    conex_X = ConexCC(com_port='com5', velocity=0.5, dev=1)
-    conex_Y = ConexCC(com_port='com6', velocity=0.5, dev=1)
-
-    if conex_X.wait_for_ready(timeout=60) and conex_Y.wait_for_ready(timeout=60):
-        conex_X.move_absolute(11.5)
-        conex_Y.move_absolute(11.5)
-
-    # Start live camera thread
-    stop_event = threading.Event()
-    camera_thread = threading.Thread(target=live_camera_view, args=(camera, conex_X, conex_Y, stop_event))
-    camera_thread.start()
-
-    # Fine-tune starting position
-    o_x, o_y = fine_tune_start(conex_X, conex_Y)
-    offset_locations(o_x, o_y, locations, 0)
+    locations = snake_positions(focal[0], focal[0] - WAFER_SIZE, focal[1], focal[1] - WAFER_SIZE, STEP_SIZE, 5)
 
     for index, location in enumerate(locations):
         conex_X.move_absolute(location[0])
@@ -178,13 +146,3 @@ if __name__ == '__main__':
         time.sleep(0.1)
 
         image_counter = take_picture(camera, image_counter, conex_X, conex_Y)
-
-    # Close everything
-    conex_X.close()
-    conex_Y.close()
-    camera.close()
-    camera.save_table("files", "image_dt.csv")
-
-    # Stop live camera thread
-    stop_event.set()
-    camera_thread.join()
