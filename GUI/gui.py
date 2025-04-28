@@ -60,8 +60,8 @@ class CameraDisplay:
                 cv2.putText(frame, pos_text, (10, 30), self.font, self.font_scale, 
                           self.color, self.thickness, cv2.LINE_AA)
                 
-                # Resize frame to fit in the GUI
-                frame = cv2.resize(frame, (640, 480)) 
+                # Resize frame to fit in the GUI - now 1.2x larger
+                frame = cv2.resize(frame, (960, 720))  # 1.2x larger (800*1.2, 600*1.2)
                 # Convert to RGB
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 # Convert to PhotoImage
@@ -108,7 +108,8 @@ def check_motor_status():
     if not motor_thread.is_alive():
         # Motor movement has completed, return to fine-tuning state
         start_button.config(text="End Fine Tuning", command=re_end_fine_tune, bg=GOLD, fg=MAROON, width=14)
-        label.config(text="Fine Tuning Mode", font=("Times New Roman", 14, "bold"), fg=GOLD)
+        label.config(text="Moving to new location", font=("Times New Roman", 14, "bold"), fg=GOLD)
+        time.sleep(1)
         conex_X.move_absolute(major_locs[locals_idx][0])
         conex_Y.move_absolute(major_locs[locals_idx][1])
     else:
@@ -203,10 +204,7 @@ def on_fine_tune(direction):
     # Update the camera display immediately after movement
     try:
         frame = camera.get_frame()
-        # pos_text = f"X: {conex_X.cur_pos:.3f} mm | Y: {conex_Y.cur_pos:.3f} mm"
-        # cv2.putText(frame, pos_text, (10, 30), camera_display.font, camera_display.font_scale, 
-        #           camera_display.color, camera_display.thickness, cv2.LINE_AA)
-        frame = cv2.resize(frame, (480, 360))
+        frame = cv2.resize(frame, (960, 720))
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image = Image.fromarray(frame)
         photo = ImageTk.PhotoImage(image=image)
@@ -217,7 +215,7 @@ def on_fine_tune(direction):
 
 root = tk.Tk()
 root.title("2D Material Search")
-root.geometry("800x700")  # Reduced window size
+root.geometry("1600x1000")  # Further increased window size
 root.configure(bg=LIGHT_MAROON)
 
 # Configure ttk style
@@ -231,32 +229,41 @@ style.configure("Maroon.Horizontal.TProgressbar",
 main_container = tk.Frame(root, bg=LIGHT_MAROON)
 main_container.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
-# Logo at the top
+# Create left panel for controls
+left_panel = tk.Frame(main_container, bg=LIGHT_MAROON, width=400)  # Further increased width for left panel
+left_panel.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 20))
+left_panel.pack_propagate(False)  # Prevent panel from shrinking
+
+# Create right panel for camera feed
+right_panel = tk.Frame(main_container, bg=LIGHT_MAROON)
+right_panel.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
+
+# Logo at the top of left panel
 logo_image = Image.open("GUI/University-of-Minnesota-Logo.png")
-logo_image = logo_image.resize((300, 150), Image.Resampling.LANCZOS)  # Increased from 250x125
+logo_image = logo_image.resize((350, 175), Image.Resampling.LANCZOS)  # Larger logo
 logo_photo = ImageTk.PhotoImage(logo_image)
-logo_label = tk.Label(main_container, image=logo_photo, bg=LIGHT_MAROON)
+logo_label = tk.Label(left_panel, image=logo_photo, bg=LIGHT_MAROON)
 logo_label.image = logo_photo
-logo_label.pack(pady=(0, 10))
+logo_label.pack(pady=(0, 20))
 
 # Status label
-label = tk.Label(main_container, text="Press Start", font=("Times New Roman", 14), 
-                bg=LIGHT_MAROON, fg=GOLD)
+label = tk.Label(left_panel, text="Press Start", font=("Times New Roman", 14), 
+                bg=LIGHT_MAROON, fg=GOLD, width=35)  # Further increased width
 label.pack(pady=(0, 20))
 
-# Camera feed frame
-camera_frame = tk.Frame(main_container, bg=LIGHT_MAROON)
-camera_frame.pack(pady=(0, 20))
+# Camera feed frame in right panel
+camera_frame = tk.Frame(right_panel, bg=LIGHT_MAROON)
+camera_frame.pack(expand=True, fill=tk.BOTH)
 camera_label = tk.Label(camera_frame, bg=LIGHT_MAROON)
-camera_label.pack()
+camera_label.pack(expand=True, fill=tk.BOTH)
 
 # Initialize camera
 camera = DirectShowCam(camera_index=1, directory="images/raw")
 camera_display = CameraDisplay(camera_label, camera)
 
-# Fine-tuning controls
-fine_tune_frame = tk.Frame(main_container, bg=LIGHT_MAROON)
-fine_tune_frame.pack(pady=(0, 10))
+# Fine-tuning controls in left panel
+fine_tune_frame = tk.Frame(left_panel, bg=LIGHT_MAROON)
+fine_tune_frame.pack(pady=(0, 20))
 
 # Fine-tuning buttons
 up_button = tk.Button(fine_tune_frame, text="↑", command=lambda: on_fine_tune("up"),
@@ -283,24 +290,24 @@ down_button = tk.Button(fine_tune_frame, text="↓", command=lambda: on_fine_tun
                        activeforeground=MAROON)
 down_button.grid(row=2, column=1, padx=5, pady=5)
 
-# Progress section
-progress_frame = tk.Frame(main_container, bg=LIGHT_MAROON)
-progress_frame.pack(pady=(0, 10))  # Reduced padding
+# Progress section in left panel
+progress_frame = tk.Frame(left_panel, bg=LIGHT_MAROON)
+progress_frame.pack(pady=(0, 20))
 
 progress_label = tk.Label(progress_frame, text="Progress: 0/900 images", 
                          font=("Times New Roman", 12), bg=LIGHT_MAROON, fg=GOLD)
 progress_label.pack()
 
-progress_bar = ttk.Progressbar(progress_frame, length=500, mode='determinate',  # Reduced length
+progress_bar = ttk.Progressbar(progress_frame, length=200, mode='determinate',
                              style="Maroon.Horizontal.TProgressbar")
-progress_bar.pack(pady=5)  # Reduced padding
+progress_bar.pack(pady=5)
 
-# Start/Kill button at the bottom
-start_button = tk.Button(main_container, text="Start", command=on_start, 
-                        font=("Times New Roman", 24), width=8, height=1,  # Reduced size
+# Start/Kill button at the bottom of left panel
+start_button = tk.Button(left_panel, text="Start", command=on_start, 
+                        font=("Times New Roman", 24), width=8, height=1,
                         bg=MAROON, fg=GOLD, activebackground=GOLD,
                         activeforeground=MAROON)
-start_button.pack(pady=(0, 10))  # Reduced padding
+start_button.pack(pady=(0, 10))
 
 def on_closing():
     camera_display.stop()
