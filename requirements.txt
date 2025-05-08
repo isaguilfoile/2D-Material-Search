@@ -1,0 +1,11 @@
+Required MATLAB toolboxes for Neural Network
+- Image Proccessing Toolbox
+- Deep Learning Toolbox
+- Computer Vision Toolbox
+
+Required Python Libraries 
+-
+
+
+Required Hardware Installations
+- 
