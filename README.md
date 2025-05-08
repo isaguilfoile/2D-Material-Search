@@ -56,7 +56,7 @@ This project aims to automate the search process for 2D materials using a combin
 
 ## References
 <a id="1">[1]</a> 
-[1] Semantic NN for pixel classification of 2D materials
+Semantic NN for pixel classification of 2D materials
 - https://github.com/yafangy/Nanomaterial_DeepLearning
 
 ## License
